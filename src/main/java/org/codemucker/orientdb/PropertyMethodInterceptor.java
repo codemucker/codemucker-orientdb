@@ -7,6 +7,9 @@ import javassist.util.proxy.MethodHandler;
 
 import com.tinkerpop.blueprints.Element;
 
+/**
+ * Intercept the proxy bean setters/getter to set/get the properties on the underlying document. 
+ */
 class PropertyMethodInterceptor implements MethodHandler {
     
     private final Element vertexOrEdge;
@@ -23,13 +26,14 @@ class PropertyMethodInterceptor implements MethodHandler {
 
     @Override
     public Object invoke(Object self, Method calledMethod, Method realMethod, Object[] args) throws Throwable {
+        //special method to get just the vertex for this proxy bean
         if( calledMethod.getParameterTypes().length == 0 ){
             if(calledMethod.getName().equals(METHOD_GET_ELEMENT)){
                 return vertexOrEdge;
             }
         }
         MethodMeta meta = methodMetaByName.get(calledMethod.getName());
-        if( meta != null){
+        if( meta != null){ //invoke the getter/setter to retrieve/set the property on the wrapped document
                 if(meta.isSetter()){
                     vertexOrEdge.setProperty(meta.getProperty(), args[0]);
                     realMethod.invoke(self, args);//also call real setter so fields are correct and can be used
